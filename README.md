@@ -58,7 +58,38 @@ pip install -r requirements.txt
  ```
 python -m streamlit run streamlit_app.py
  ```
- 
+
+## Export to 3D (FBX / OBJ)
+
+Save the molecule as a real 3D model with sphere atoms and cylinder bonds.
+The export lives in `mesh_export.py` and only uses `numpy`, `scipy` and
+`rdkit` — already in `requirements.txt`. ASCII FBX 7.4 is written so the file
+opens in Blender, Maya, 3ds Max, Cinema 4D, Unity and Unreal without needing
+the Autodesk FBX SDK. Materials are deduplicated by atom color, so all
+carbons share one material, all hydrogens share another, etc.
+
+Command line:
+
+```
+# write paracetamol.fbx (with a 3D conformer) next to the 2D icon
+python molecule_icon_generator.py "CC(=O)Nc1ccc(cc1)O" --name paracetamol --fbx
+
+# also write a Wavefront OBJ + MTL alongside the FBX, and bump tessellation
+python molecule_icon_generator.py "CCO" --name ethanol --fbx --obj --fbx_resolution 32
+```
+
+From Python:
+
+```
+import molecule_icon_generator as mig
+mol = mig.parse_structure("CC(=O)Nc1ccc(cc1)O", dimension_3=True)
+mig.save_3d_fbx(mol, name="paracetamol", directory=".", verbose=True)
+```
+
+In the Streamlit app, switch the dimension selector to `3D interactive` and
+a `Download 3D model (FBX)` button appears next to the existing HTML
+download.
+
 ## Donate
 
 I enjoy working on this project in my free time, especially at night. If you want to support me with a coffee, just [click here!](https://www.paypal.com/donate/?hosted_button_id=V4LJ3Z3B3KXRY)

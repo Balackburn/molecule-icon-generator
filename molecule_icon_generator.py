@@ -924,6 +924,71 @@ def graph_3d(mol, name='molecule_icon', directory=os.getcwd(), rdkit_png=False, 
     return fig
 
 
+def save_3d_fbx(mol, name='molecule_icon', directory=os.getcwd(),
+                atom_color=color_map, radius_multi=atom_resize,
+                atom_radius=0.5, pos_multi=1.0, resolution=24,
+                remove_H=True, rotation=(0, 0, 0), up_axis='Z',
+                also_obj=False, verbose=False):
+    """Save the molecule as an ASCII FBX file (sphere atoms + cylinder bonds).
+
+    The mesh layout matches `graph_3d`. Defaults use small units (~1 unit per
+    atom) so the file imports cleanly into Blender / Unity / Unreal without
+    additional scaling.
+
+    Parameters
+    ----------
+    mol : rdkit Mol
+        The molecule (must have a 3D conformer; use parse_structure with
+        dimension_3=True).
+    name : str
+        File name without extension.
+    directory : str
+        Output folder.
+    atom_color, radius_multi : dict
+        Same dictionaries as `graph_3d` / `icon_print`.
+    atom_radius : float, default 0.5
+        Base sphere radius in scene units.
+    pos_multi : float, default 1.0
+        Multiplier applied to atomic coordinates.
+    resolution : int, default 24
+        Latitude/longitude segments for spheres; segments around cylinders.
+    remove_H : bool, default True
+        Drop non-chiral hydrogens, mirroring the rest of the package.
+    rotation : tuple, default (0, 0, 0)
+        Euler rotation in degrees applied before export.
+    up_axis : {'X', 'Y', 'Z'}, default 'Z'
+        Up axis written into the FBX GlobalSettings (RDKit conformers are
+        Z-up; Blender keeps it that way, Unity/Unreal will reorient on import).
+    also_obj : bool, default False
+        Also write a `.obj` + `.mtl` next to the FBX (useful for sanity checks
+        and for tools that prefer OBJ).
+    verbose : bool, default False
+        Print the resulting paths.
+    """
+    from mesh_export import (build_molecule_meshes, write_ascii_fbx, write_obj)
+
+    parts = build_molecule_meshes(
+        mol,
+        atom_color=atom_color,
+        radius_multi=radius_multi,
+        atom_radius=atom_radius,
+        pos_multi=pos_multi,
+        resolution=resolution,
+        remove_H=remove_H,
+        rotation=rotation,
+    )
+    fbx_path = os.path.join(directory, f'{name}.fbx')
+    write_ascii_fbx(parts, fbx_path, up_axis=up_axis)
+    obj_path = None
+    if also_obj:
+        obj_path = write_obj(parts, os.path.join(directory, name))
+    if verbose:
+        print(f'\033[0;32mFBX written: {fbx_path}\033[0;0;m')
+        if obj_path:
+            print(f'\033[0;32mOBJ written: {obj_path}\033[0;0;m')
+    return fbx_path
+
+
 def parse():
     # create a parser for command line
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -971,14 +1036,40 @@ def parse():
     optional.add_argument("-v", "--verbose",
                           action='store_true',
                           help='Print the 2D coordinates of each atom')
+    optional.add_argument("--fbx",
+                          action='store_true',
+                          help='Save a 3D ASCII FBX file (sphere atoms + cylinder bonds)')
+    optional.add_argument("--obj",
+                          action='store_true',
+                          help='Save a 3D Wavefront OBJ + MTL file alongside the FBX')
+    optional.add_argument("--fbx_resolution",
+                          type=int,
+                          default=24,
+                          help='Triangulation resolution for FBX/OBJ atoms and bonds')
+    optional.add_argument("--fbx_up_axis",
+                          choices=['X', 'Y', 'Z'],
+                          default='Z',
+                          help='Up axis written into the FBX GlobalSettings')
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     parsed = parse()
-    molecule = parse_structure(parsed.SMILE)
+    # 3D conformer is required for FBX/OBJ; build it lazily so the existing
+    # 2D icon flow keeps working untouched.
+    needs_3d = parsed.fbx or parsed.obj
+    molecule = parse_structure(parsed.SMILE, dimension_3=needs_3d)
     icon_print(molecule, name=parsed.name, directory=parsed.directory, pos_multi=int(300 * parsed.position_multiplier),
                rdkit_svg=parsed.rdkit_svg, single_bonds=parsed.single_bond, save_png=True, verbose=parsed.verbose,
                atom_radius=100 * parsed.atom_multiplier, remove_H=parsed.remove_H,
                shadow=not parsed.hide_shadows, shadow_light=parsed.shadow_light)
+    if needs_3d:
+        save_3d_fbx(molecule, name=parsed.name, directory=parsed.directory,
+                    atom_radius=0.5 * parsed.atom_multiplier,
+                    pos_multi=parsed.position_multiplier,
+                    resolution=parsed.fbx_resolution,
+                    remove_H=parsed.remove_H,
+                    up_axis=parsed.fbx_up_axis,
+                    also_obj=parsed.obj,
+                    verbose=True)

@@ -554,8 +554,29 @@ For more options and information, check out the
                 btn = st.download_button(label="Download 3D plot",
                                          data=file,
                                          file_name="molecule-icon-graph.html",
-                                         help=f'''Download the html graph and open it in your browser to take 
+                                         help=f'''Download the html graph and open it in your browser to take
                                               {img_format} snapshots with the camera button''')
+
+            # FBX (3D mesh) download — works on the same molecule that fed graph_3d
+            try:
+                fbx_path = mig.save_3d_fbx(mol,
+                                           name='molecule_icon_3d',
+                                           directory=direct,
+                                           atom_color=new_color,
+                                           radius_multi=resize,
+                                           atom_radius=0.5,
+                                           pos_multi=1.0,
+                                           resolution=max(8, resolution),
+                                           remove_H=remove_H)
+                with open(fbx_path, "rb") as file:
+                    st.download_button(label="Download 3D model (FBX)",
+                                       data=file,
+                                       file_name="molecule_icon_3d.fbx",
+                                       mime="application/octet-stream",
+                                       help='''ASCII FBX 7.4 with sphere atoms and cylinder bonds.
+                                            Open in Blender, Maya, 3ds Max, Cinema 4D, Unity or Unreal.''')
+            except Exception as fbx_err:
+                st.warning(f'FBX export failed: {fbx_err}')
         else:
             st.write('''
                 Image SVG preview:
