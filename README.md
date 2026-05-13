@@ -90,6 +90,24 @@ In the Streamlit app, switch the dimension selector to `3D interactive` and
 a `Download 3D model (FBX)` button appears next to the existing HTML
 download.
 
+## Molecule Finder (one-page 3D preview)
+
+A streamlined companion app: type a molecule name (e.g. `THC`, `caffeine`,
+`aspirin`), get an inline 3D preview and one-click downloads (FBX, OBJ+MTL,
+interactive HTML, settings JSON). Name resolution uses `cirpy` first, then
+falls back to the PubChem REST API — so it works even without `cirpy`
+installed.
+
+```
+python -m streamlit run streamlit_finder.py
+```
+
+Quick-pick row covers THC, CBD, caffeine, aspirin, paracetamol, glucose,
+adrenaline, serotonin, dopamine, nicotine, cholesterol and vitamin C.
+Customization sidebar offers CPK / monochrome / fully custom palettes,
+atom radius, bond thickness, mesh resolution, and the `remove hydrogens`
+toggle.
+
 ## Donate
 
 I enjoy working on this project in my free time, especially at night. If you want to support me with a coffee, just [click here!](https://www.paypal.com/donate/?hosted_button_id=V4LJ3Z3B3KXRY)
