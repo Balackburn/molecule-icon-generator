@@ -90,16 +90,65 @@ In the Streamlit app, switch the dimension selector to `3D interactive` and
 a `Download 3D model (FBX)` button appears next to the existing HTML
 download.
 
-## Molecule Finder (one-page 3D preview)
+## Molecule Finder (production-grade companion app)
 
-A streamlined companion app: type a molecule name (e.g. `THC`, `caffeine`,
-`aspirin`), get an inline 3D preview and one-click downloads (FBX, OBJ+MTL,
-interactive HTML, settings JSON). Name resolution uses `cirpy` first, then
-falls back to the PubChem REST API — so it works even without `cirpy`
-installed.
+A streamlined Streamlit front-end: type a molecule name (e.g. `THC`,
+`caffeine`), a SMILES string, or a PubChem CID — get an inline 3D preview
+and one-click downloads (FBX, OBJ+MTL, interactive HTML, settings JSON).
+The resolver prefers PubChem's pre-computed 3D SDFs and falls back to
+PubChem SMILES → ETKDG, then cirpy, then a direct SMILES parse.
+
+### Run locally
 
 ```
+# Pinned, reproducible:
+pip install -r requirements-finder.txt
 python -m streamlit run streamlit_finder.py
+```
+
+### Run in Docker
+
+```
+docker build -t molecule-finder .
+docker run --rm -p 8501:8501 molecule-finder
+```
+
+The container is non-root, ships a `/_stcore/health` healthcheck, and reads
+all knobs from the environment (`MIF_*` — see `finder/config.py`):
+
+| Var                       | Default                                   |
+| ------------------------- | ----------------------------------------- |
+| `MIF_PUBCHEM_BASE`        | https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound |
+| `MIF_HTTP_TIMEOUT`        | 15 (seconds)                              |
+| `MIF_MAX_QUERY_LENGTH`    | 200                                       |
+| `MIF_MAX_ATOMS`           | 600                                       |
+| `MIF_MAX_BONDS`           | 600                                       |
+| `MIF_CACHE_TTL`           | 86 400 (seconds)                          |
+| `MIF_DEFAULT_RESOLUTION`  | 24 (FBX/OBJ triangulation)                |
+| `MIF_PREVIEW_RESOLUTION`  | 20 (in-page preview)                      |
+| `MIF_LOG_LEVEL`           | INFO                                      |
+
+### Test
+
+```
+pip install -r requirements-finder.txt
+pytest tests/ -v
+```
+
+30 unit + integration tests cover the mesh primitives, FBX/OBJ writers,
+resolver validation, and the live PubChem branch. CI runs the same suite
+on Python 3.11 and 3.12 (`.github/workflows/test-finder.yml`).
+
+### What's inside
+
+```
+finder/
+  config.py       # env-driven runtime configuration + presets
+  resolver.py     # query → ResolveResult (PubChem 3D → SMILES → cirpy)
+  exporters.py    # FBX / OBJ.zip / HTML / settings-JSON byte builders
+mesh_export.py    # pure-Python sphere/cylinder/FBX/OBJ writers (no SDK)
+streamlit_finder.py  # Streamlit UI — composition only
+tests/            # offline unit tests + live integration tests
 ```
 
 Quick-pick row covers THC, CBD, caffeine, aspirin, paracetamol, glucose,

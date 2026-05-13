@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+.venv/
+.env
+
+# Streamlit/Plotly caches
+.streamlit/cache/
+
+# Local outputs from the original 2D pipeline
+*.svg
+*.png
+*.jpeg
+*.pdf
+!example/*.svg
+!example/*.png
+!example/*.jpeg
+!example/*.pdf
+
+# Local outputs from the finder pipeline
+icons_list/

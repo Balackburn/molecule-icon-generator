@@ -1,0 +1,31 @@
+# Pinned dependencies for the production Molecule Finder app.
+# Use this for reproducible deployments. The original requirements.txt
+# stays loose for the historical app.
+#
+#   uv pip install -r requirements-finder.txt
+#   pip install -r requirements-finder.txt
+#
+# Resolved 2026-05-14 against PyPI on macOS arm64 / Python 3.11.
+
+# --- 3D + chemistry ------------------------------------------------------
+rdkit==2026.3.1
+numpy==2.4.4
+scipy==1.17.1
+
+# --- App framework -------------------------------------------------------
+streamlit==1.57.0
+plotly==6.7.0
+requests==2.34.1
+
+# --- Name resolution (cirpy is a soft fallback after PubChem) ------------
+cirpy==1.0.2
+
+# --- Used by molecule_icon_generator.py 2D paths -------------------------
+svglib==1.6.0
+reportlab==4.5.1
+pdf2image==1.17.0
+kaleido==1.3.0
+opencv-python-headless==4.13.0.92
+
+# --- Tests ---------------------------------------------------------------
+pytest==9.0.3
