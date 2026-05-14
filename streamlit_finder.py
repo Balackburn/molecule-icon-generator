@@ -188,7 +188,7 @@ def render_header() -> str:
                 placeholder='Try "THC", "caffeine" or "CC(=O)OC1=CC=CC=C1C(=O)O"',
             )
         with col_btn:
-            submitted = st.form_submit_button('Find', use_container_width=True,
+            submitted = st.form_submit_button('Find', width='stretch',
                                               type='primary')
     if submitted and new_q.strip():
         st.session_state['query'] = new_q.strip()
@@ -197,7 +197,7 @@ def render_header() -> str:
     preset_cols = st.columns(len(config.PRESETS))
     for i, (label, term) in enumerate(config.PRESETS.items()):
         with preset_cols[i]:
-            if st.button(label, key=f'preset_{label}', use_container_width=True):
+            if st.button(label, key=f'preset_{label}', width='stretch'):
                 st.session_state['query'] = term
                 st.rerun()
 
@@ -263,7 +263,7 @@ def render_result(query: str, settings: AppearanceSettings) -> None:
     with preview_col:
         st.plotly_chart(
             fig,
-            use_container_width=True,
+            width='stretch',
             config={'displaylogo': False,
                     'toImageButtonOptions': {
                         'format': 'png',
@@ -284,7 +284,7 @@ def render_result(query: str, settings: AppearanceSettings) -> None:
                 st.warning(f'{label}: {exc}', icon='⚠️')
                 return
             st.download_button(label, data=data, file_name=file_name,
-                               mime=mime, use_container_width=True)
+                               mime=mime, width='stretch')
 
         _safe_download(
             '⬇︎ FBX (3D model)',
